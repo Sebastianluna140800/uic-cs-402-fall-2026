@@ -4,8 +4,8 @@
 #include <type_traits>
 
 
-#ifndef FIRSTNAME_LASTNAME_PROJECT1
-#define FIRSTNAME_LASTNAME_PROJECT1
+#ifndef DANIEL_LUNA_PROJECT1
+#define DANIEL_LUNA_PROJECT1
 
 using namespace std;
 

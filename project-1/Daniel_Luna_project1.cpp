@@ -8,7 +8,7 @@
 #include <type_traits>
 
 #include "testing.h"
-#include "Firstname_Lastname_project1.h"
+#include "Daniel_Luna_project1.h"
 
 using namespace std;
 
@@ -39,7 +39,7 @@ using namespace std;
 
 /** This please add your name here as well **/
 const std::string who_am_i() {
-    return "Firstname_Lastname";
+    return "Daniel_Luna";
 }
 
 
@@ -67,6 +67,17 @@ const std::string who_am_i() {
 template<typename T>
 void bubble_sort(vector<T> &list, bool descending) {
     // Your code here!
+    int n = list.size();
+    for(int i = 0; i < n-1; i++) {
+        for(int j = 0; j < n-i-1; j++) {
+            bool wrongOrder = (!descending && list[j] > list[j+1]) || (descending && list[j] < list[j+1]);
+            if(wrongOrder) {
+                T temp = list[j];
+                list[j] = list[j+1];
+                list[j+1] = temp;
+            }
+        }
+    }
 }
 
 
@@ -101,6 +112,26 @@ void bubble_sort(vector<T> &list, bool descending) {
 template<typename T>
 void selection_sort(vector<T> &list, bool descending) {
     // Your code here!
+    int n = list.size();
+    for(int i = 0; i < n-1; i++) {
+        int selected = i;
+        for(int j = i+1; j < n; j++) {
+            if(!descending) {
+                if(list[j] < list[selected]) {
+                    selected = j;
+                }
+            } else {
+                if(list[j] > list[selected]) {
+                    selected = j;
+                }
+            }
+        }
+        if(selected != i) {
+            T temp = list[i];
+            list[i] = list[selected];
+            list[selected] = temp;
+        }
+    }
 }
 
 
@@ -138,6 +169,23 @@ void selection_sort(vector<T> &list, bool descending) {
 template<typename T>
 void insertion_sort(vector<T> &list, bool descending) {
     // Your code here!
+    int n = list.size();
+    for(int i = 1; i < n; i++) {
+        T key = list[i];
+        int j = i - 1;
+        if(!descending) {
+            while(j >= 0 && list[j] > key) {
+                list[j+1] = list[j];
+                j--;
+            }
+        } else {
+            while(j >= 0 && list[j] < key) {
+                list[j+1] = list[j];
+                j--;
+            }
+        }
+        list[j + 1] = key;
+    }
 }
 
 
@@ -168,8 +216,52 @@ void insertion_sort(vector<T> &list, bool descending) {
 template<typename T>
 void quicksort(vector<T> &list, bool descending) {
     // Your code here!
-}
+    if(list.size() <= 1) {
+        return;
+    }
+    auto quick_sort_helper = [&](auto&& self, int left, int right) -> void {
+        if(left >= right) {
+            return;
+        }
 
+        unsigned int length = right - left + 1;
+        unsigned int pivot_index = left + rand() % length;
+        T pivot = list[pivot_index];
+        int i = left;
+        int j = right;
+        while(i <= j) {
+            if(!descending) {
+                while(list[i] < pivot) {
+                    i++;
+                }
+                while(list[j] > pivot) {
+                    j--;
+                }
+            } else {
+                while(list[i] > pivot) {
+                    i++;
+                }
+                while(list[j] < pivot) {
+                    j--;
+                }
+            }
+            if(i <= j) {
+                T temp = list[i];
+                list[i] = list[j];
+                list[j] = temp;
+                i++;
+                j--;
+            }
+        }
+        if(left < j) {
+            self(self, left, j);
+        }
+        if(i < right) {
+            self(self, i, right);
+        }
+    };
+    quick_sort_helper(quick_sort_helper, 0, static_cast<int>(list.size()) - 1);
+}
 
 
 
@@ -196,7 +288,60 @@ void quicksort(vector<T> &list, bool descending) {
  * */
 template<typename T>
 void merge_sort(vector<T> &list, bool decending) {
-    // Your code here!
+    if(list.size() <= 1) {
+        return;
+    }
+
+    auto merge_helper = [&](auto&& self, int left, int right) -> void {
+        if(left >= right) {
+            return;
+        }
+
+        int mid = left + (right - left) / 2;
+
+        self(self, left, mid);
+        self(self, mid + 1, right);
+
+        vector<T> temp;
+
+        int i = left;
+        int j = mid + 1;
+
+        while(i <= mid && j <= right) {
+            bool takeLeft;
+
+            if(!decending) {
+                takeLeft = !(list[j] < list[i]);
+            }
+            else {
+                takeLeft = !(list[j] > list[i]);
+            }
+
+            if(takeLeft) {
+                temp.push_back(list[i]);
+                i++;
+            }
+            else {
+                temp.push_back(list[j]);
+                j++;
+            }
+        }
+
+        while(i <= mid) {
+            temp.push_back(list[i]);
+            i++;
+        }
+
+        while(j <= right) {
+            temp.push_back(list[j]);
+            j++;
+        }
+
+        for(int k = 0; k < static_cast<int>(temp.size()); k++) {
+            list[left + k] = temp[k];
+        }
+    };
+    merge_helper(merge_helper, 0, static_cast<int>(list.size()) - 1);
 }
 
 
@@ -232,6 +377,78 @@ void merge_sort(vector<T> &list, bool decending) {
 template<typename T>
 void my_hybrid_sort(vector<T> &list, bool descending) {
     // Your code here!
+    const int threshold = 10;
+    auto insertion_range = [&](int left, int right) {
+        for(int i = left + 1; i <= right; i++) {
+            T key = list[i];
+            int j = i - 1;
+            if(!descending) {
+                while(j >= left && list[j] > key) {
+                    list[j + 1] = list[j];
+                    j--;
+                }
+            } else {
+                while(j >= left && list[j] < key) {
+                    list[j + 1] = list[j];
+                    j--;
+                }
+            }
+            list[j + 1] = key;
+        }
+    };
+    auto hybrid_helper = [&](auto&& self, int left, int right) -> void {
+        if(left >= right) {
+            return;
+        }
+        if(right - left + 1 <= threshold) {
+            insertion_range(left, right);
+            return;
+        }
+        int mid = left + (right - left) / 2;
+        self(self, left, mid);
+        self(self, mid + 1, right);
+
+        vector<T> temp;
+        int i = left;
+        int j = mid + 1;
+
+        while(i <= mid && j <= right) {
+            bool takeLeft;
+
+            if(!descending) {
+                takeLeft = !(list[j] < list[i]);
+            }
+            else {
+                takeLeft = !(list[j] > list[i]);
+            }
+
+            if(takeLeft) {
+                temp.push_back(list[i]);
+                i++;
+            }
+            else {
+                temp.push_back(list[j]);
+                j++;
+            }
+        }
+
+        while(i <= mid) {
+            temp.push_back(list[i]);
+            i++;
+        }
+
+        while(j <= right) {
+            temp.push_back(list[j]);
+            j++;
+        }
+
+        for(int k = 0; k < static_cast<int>(temp.size()); k++) {
+            list[left + k] = temp[k];
+        }
+    };
+    if(!list.empty()) {
+        hybrid_helper(hybrid_helper, 0, static_cast<int>(list.size()) - 1);
+    }
 }
 
 
@@ -254,6 +471,47 @@ void my_hybrid_sort(vector<T> &list, bool descending) {
 template<Integral T> 
 void binary_radix_sort(vector<T> &list, bool descending) {
     // Your code here!
+    if(list.size() <= 1) {
+        return;
+    }
+    using UnsignedType = std::make_unsigned_t<T>;
+    const unsigned int numBits = sizeof(T) * 8;
+    auto key_of = [](T value) -> UnsignedType {
+        UnsignedType key = static_cast<UnsignedType>(value);
+        if constexpr (std::is_signed_v<T>) {
+            UnsignedType signBit = UnsignedType(1) << (sizeof(T) * 8 - 1);
+            key ^= signBit;
+        }
+        return key;
+    };
+    for (unsigned int bit = 0; bit < numBits; bit++) {
+        vector<T> zeroBucket;
+        vector<T> oneBucket;
+        for (const T& value : list) {
+            UnsignedType key = key_of(value);
+            if ((key >> bit) & UnsignedType(1)) {
+                oneBucket.push_back(value);
+            } else {
+                zeroBucket.push_back(value);
+            }
+        }
+        int index = 0;
+        if (!descending) {
+            for (const T& value : zeroBucket) {
+                list[index++] = value;
+            }
+            for (const T& value : oneBucket) {
+                list[index++] = value;
+            }
+        } else {
+            for (const T& value : oneBucket) {
+                list[index++] = value;
+            }
+            for (const T& value : zeroBucket) {
+                list[index++] = value;
+            }
+        }
+    }
 }
 
 
@@ -292,6 +550,10 @@ void binary_radix_sort(vector<T> &list, bool descending) {
 template<Integral T>
 void radix_sort(vector<T> &list, unsigned int base, bool descending) {
     // Your code here!
+    if(list.size() <= 1 || base < 2) {
+        return;
+    }
+    using UnsignedType = std::make_unsigned_t<T>;
 }
 
 
@@ -316,92 +578,92 @@ int main() {
      *     autograder will throw an error if you run it without uncommenting the code.
      */
 
-    //vector<int> test_list {1, 2, 3, 4, 5};
-    //vector<unsigned int> test_list2 {1, 2, 3, 4, 5};
-    //vector<StableChar> test_list3  {};
-    //vector<StableInt> test_list4 {};
-    //vector<StableString> test_list5 {};
-    //vector<short> test_list6  {};
-    //vector<unsigned short> test_list7  {};
-    //vector<long> test_list8  {};
-    //vector<unsigned long> test_list9  {};
+    vector<int> test_list {1, 2, 3, 4, 5};
+    vector<unsigned int> test_list2 {1, 2, 3, 4, 5};
+    vector<StableChar> test_list3  {};
+    vector<StableInt> test_list4 {};
+    vector<StableString> test_list5 {};
+    vector<short> test_list6  {};
+    vector<unsigned short> test_list7  {};
+    vector<long> test_list8  {};
+    vector<unsigned long> test_list9  {};
 
 
-    //insertion_sort(test_list);
-    //insertion_sort(test_list2);
-    //insertion_sort(test_list3);
-    //insertion_sort(test_list4);
-    //insertion_sort(test_list5);
-    //insertion_sort(test_list6);
-    //insertion_sort(test_list7);
-    //insertion_sort(test_list8);
-    //insertion_sort(test_list9);
+    insertion_sort(test_list);
+    insertion_sort(test_list2);
+    insertion_sort(test_list3);
+    insertion_sort(test_list4);
+    insertion_sort(test_list5);
+    insertion_sort(test_list6);
+    insertion_sort(test_list7);
+    insertion_sort(test_list8);
+    insertion_sort(test_list9);
 
 
-    //selection_sort(test_list);
-    //selection_sort(test_list2);
-    //selection_sort(test_list3);
-    //selection_sort(test_list4);
-    //selection_sort(test_list5);
-    //selection_sort(test_list6);
-    //selection_sort(test_list7);
-    //selection_sort(test_list8);
-    //selection_sort(test_list9);
+    selection_sort(test_list);
+    selection_sort(test_list2);
+    selection_sort(test_list3);
+    selection_sort(test_list4);
+    selection_sort(test_list5);
+    selection_sort(test_list6);
+    selection_sort(test_list7);
+    selection_sort(test_list8);
+    selection_sort(test_list9);
 
-    //bubble_sort(test_list);
-    //bubble_sort(test_list2);
-    //bubble_sort(test_list3);
-    //bubble_sort(test_list4);
-    //bubble_sort(test_list5);
-    //bubble_sort(test_list6);
-    //bubble_sort(test_list7);
-    //bubble_sort(test_list8);
-    //bubble_sort(test_list9);
+    bubble_sort(test_list);
+    bubble_sort(test_list2);
+    bubble_sort(test_list3);
+    bubble_sort(test_list4);
+    bubble_sort(test_list5);
+    bubble_sort(test_list6);
+    bubble_sort(test_list7);
+    bubble_sort(test_list8);
+    bubble_sort(test_list9);
 
 
-    //merge_sort(test_list);
-    //merge_sort(test_list2);
-    //merge_sort(test_list3);
-    //merge_sort(test_list4);
-    //merge_sort(test_list5);
-    //merge_sort(test_list6);
-    //merge_sort(test_list7);
-    //merge_sort(test_list8);
-    //merge_sort(test_list9);
+    merge_sort(test_list);
+    merge_sort(test_list2);
+    merge_sort(test_list3);
+    merge_sort(test_list4);
+    merge_sort(test_list5);
+    merge_sort(test_list6);
+    merge_sort(test_list7);
+    merge_sort(test_list8);
+    merge_sort(test_list9);
 
-    //quicksort(test_list);
-    //quicksort(test_list2);
-    //quicksort(test_list3);
-    //quicksort(test_list4);
-    //quicksort(test_list5);
-    //quicksort(test_list6);
-    //quicksort(test_list7);
-    //quicksort(test_list8);
-    //quicksort(test_list9);
+    quicksort(test_list);
+    quicksort(test_list2);
+    quicksort(test_list3);
+    quicksort(test_list4);
+    quicksort(test_list5);
+    quicksort(test_list6);
+    quicksort(test_list7);
+    quicksort(test_list8);
+    quicksort(test_list9);
 
-    //my_hybrid_sort(test_list);
-    //my_hybrid_sort(test_list2);
-    //my_hybrid_sort(test_list3);
-    //my_hybrid_sort(test_list4);
-    //my_hybrid_sort(test_list5);
-    //my_hybrid_sort(test_list6);
-    //my_hybrid_sort(test_list7);
-    //my_hybrid_sort(test_list8);
-    //my_hybrid_sort(test_list9);
+    my_hybrid_sort(test_list);
+    my_hybrid_sort(test_list2);
+    my_hybrid_sort(test_list3);
+    my_hybrid_sort(test_list4);
+    my_hybrid_sort(test_list5);
+    my_hybrid_sort(test_list6);
+    my_hybrid_sort(test_list7);
+    my_hybrid_sort(test_list8);
+    my_hybrid_sort(test_list9);
 
-    //binary_radix_sort(test_list);
-    //binary_radix_sort(test_list2);
-    //binary_radix_sort(test_list6);
-    //binary_radix_sort(test_list7);
-    //binary_radix_sort(test_list8);
-    //binary_radix_sort(test_list9);
+    binary_radix_sort(test_list);
+    binary_radix_sort(test_list2);
+    binary_radix_sort(test_list6);
+    binary_radix_sort(test_list7);
+    binary_radix_sort(test_list8);
+    binary_radix_sort(test_list9);
 
-    //radix_sort(test_list);
-    //radix_sort(test_list2);
-    //radix_sort(test_list6);
-    //radix_sort(test_list7);
-    //radix_sort(test_list8);
-    //radix_sort(test_list9);
+    radix_sort(test_list);
+    radix_sort(test_list2);
+    radix_sort(test_list6);
+    radix_sort(test_list7);
+    radix_sort(test_list8);
+    radix_sort(test_list9);
 
 
     return 0;
