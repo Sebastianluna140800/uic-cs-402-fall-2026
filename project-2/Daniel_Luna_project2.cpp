@@ -7,14 +7,15 @@
 #include <iostream>
 #include <algorithm>
 #include "sha256.c"
+#include <unordered_map>
 
 // be sure to change FIRSTNAME and LASTNAME with your own first and last name
-#include "Firstname_Lastname_project2.h"
+#include "Daniel_Luna_project2.h"
 
 using namespace std;
 
 const string who_am_i() {
-    return "Firstname_Lastname";
+    return "Daniel_Luna";
 }
 
 /****************
@@ -107,6 +108,29 @@ vector<unsigned int> birthday_attack_1(function<unsigned short(unsigned int)> ha
     // signatures match the `test_hash` function signature.
     
     // Your code here!
+    for (int i = 0; i < 3; i++) {
+
+    unordered_map<unsigned short, unsigned int> seen;
+
+    for (int j = 0; j < 350; j++) {
+
+        unsigned int input = sample_int();
+        unsigned short hash = hash_function(input);
+
+        if (seen.find(hash) != seen.end()) {
+
+            unsigned int old_input = seen[hash];
+
+            if (old_input != input) {
+                return {old_input, input};
+            }
+        }
+
+        seen[hash] = input;
+    }
+}
+
+return {};
 }
 
 
@@ -160,6 +184,22 @@ vector<unsigned int> birthday_attack_2(function<unsigned short(unsigned int)> ha
     // signatures match the `test_hash` function signature.
     
     // Your code here!
+    unsigned int tort = hash_function(0);
+    unsigned int hare = hash_function(hash_function(0));
+
+    while (tort != hare) {
+        tort = hash_function(tort);
+        hare = hash_function(hash_function(hare));
+    }
+
+    tort = 0;
+
+    while (hash_function(tort) != hash_function(hare)) {
+        tort = hash_function(tort);
+        hare = hash_function(hare);
+    }
+
+    return {tort, hare};
 }
 
 
@@ -206,6 +246,21 @@ vector<unsigned int> birthday_attack_2(function<unsigned short(unsigned int)> ha
 
 
 string merkle_commit(const vector<string>& list, function<string(string)> hash_function) {
+    vector<string> curr_lvl;
+    for (unsigned int i = 0; i < list.size(); i++) 
+    {
+        curr_lvl.push_back(hash_function(list[i] + to_string(i)));
+    }
+    while (curr_lvl.size() > 1) {
+        vector<string> next_lvl;
+        for (unsigned int i = 0; i < curr_lvl.size(); i += 2) 
+        {
+            string combined = curr_lvl[i] + curr_lvl[i + 1];
+            next_lvl.push_back(hash_function(combined));
+        }
+        curr_lvl = next_lvl;
+    }
+    return curr_lvl[0];
 }
 
  /* 2. The Positional Open Algorithm (20 points)
@@ -304,7 +359,49 @@ vector<pair<string,string>> merkle_open_position(
     function<string(string)> hash_function, 
     const unsigned int i
 ) {
-    
+    vector<pair<string,string>> proof;
+    if(list.empty())
+    {
+        return proof;
+    }    
+    if(i%2 == 0)
+    {
+        proof.push_back({ "L", list[i] });
+    }
+    else
+    {
+        proof.push_back({ "R", list[i] });
+    }
+
+    vector<string> current_level;
+
+    for(unsigned int j = 0; j < list.size(); j++)
+    {
+        current_level.push_back(hash_function(list[j] + to_string(j)));
+    }
+
+    unsigned int index = i;
+    while(current_level.size() > 1)
+    {
+        if(index % 2 == 0)
+        {
+            proof.push_back({ "R", current_level[index + 1] });
+        }
+        else
+        {
+            proof.push_back({ "L", current_level[index - 1] });
+        }
+
+        vector<string> next_level;
+        for(unsigned int j = 0; j < current_level.size(); j += 2)
+        {
+            next_level.push_back(hash_function(current_level[j] + current_level[j + 1]));
+        }
+        index = index / 2;
+        current_level = next_level;
+        
+    }
+    return proof;
 }
 
 
@@ -353,7 +450,34 @@ int merkle_verify_position(
     const vector<pair<string,string>>& proof, 
     function<string(string)> hash_function, 
     const unsigned int i
-) {
+) 
+{
+    if (proof.empty()) 
+    {
+        return 1;
+    }
+    string h = hash_function(proof[0].second + to_string(i));
+    for (unsigned int j = 1; j < proof.size(); j++)
+    {
+        if (proof[j].first == "L")
+        {
+            h = hash_function(proof[j].second + h);
+        }
+        else if (proof[j].first == "R")
+        {
+            h = hash_function(h + proof[j].second);
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
+    if(h == root)
+    {
+        return 0;
+    }
+    return 1;
 }
 
 
@@ -376,7 +500,14 @@ int merkle_verify_position(
  *          size n, where n is NOT a power of 2.
  */
 
-int merkle_verify_full(const string root, const vector<std::string>& list, function<string(string)> hash_function) {
+int merkle_verify_full(const string root, const vector<std::string>& list, function<string(string)> hash_function) 
+{
+    string cmp_root = merkle_commit(list, hash_function);
+    if(cmp_root == root)
+    {
+        return 0;
+    }
+    return 1;
 }
 
 
