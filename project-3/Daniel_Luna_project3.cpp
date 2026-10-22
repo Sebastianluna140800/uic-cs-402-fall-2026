@@ -2,14 +2,17 @@
 #include <vector>
 #include <string>
 #include <iostream>
-
+#include <queue>
+#include <algorithm>
+#include <stack>
 // be sure to change FIRSTNAME and LASTNAME with your own first and last name
-#include "Firstname_Lastname_project3.h"
+#include "Daniel_Luna_project3.h"
+
 
 using namespace std;
 
 const string who_am_i() {
-    return "Firstname_Lastname";
+    return "Daniel_Luna";
 }
 
 
@@ -137,7 +140,31 @@ const string who_am_i() {
 
 // Do not modify this function signature.
 vector<int> weird_traversal(TreeNode* root) {
-    // Your code here!
+    vector<int> result;
+    vector<int> odd;
+    if (root == nullptr) {
+        return result;
+    }
+    queue<pair<TreeNode*, int>> q;
+    q.push({root, 0});
+    while (!q.empty()) {
+        TreeNode* current = q.front().first;
+        int level = q.front().second;
+        q.pop();
+        if (level % 2 == 0) {
+            result.push_back(current->id);
+        } else {
+            odd.push_back(current->id);
+        }
+        TreeNode* child = current->first_child;
+        while (child != nullptr) {
+            q.push({child, level + 1});
+            child = child->next_sibling;
+        }
+    }
+    reverse(odd.begin(), odd.end());
+    result.insert(result.end(), odd.begin(), odd.end());
+    return result;
 }
 
 
@@ -205,8 +232,55 @@ vector<int> weird_traversal(TreeNode* root) {
  *                5
  */
 
+ void deleteTree(TreeNode* root) {
+    if (root == nullptr) {
+        return;
+    }
+    TreeNode* child = root->first_child;
+    while (child != nullptr) {
+        TreeNode* next = child->next_sibling;
+        deleteTree(child);
+        child = next;
+    }
+    delete root;
+}
 // Do not modify this fuction signature
 TreeNode* bits_to_tree(const vector<bool>& bits) {
+    TreeNode* root = new TreeNode{0, nullptr, nullptr};
+    stack<TreeNode*> path;
+    path.push(root);
+    int nextId = 1;
+    for (bool bit : bits) {
+        if (bit) {
+            TreeNode* parent = path.top();
+            TreeNode* child = new TreeNode{
+                nextId++, nullptr, nullptr
+            };
+            if (parent->first_child == nullptr) {
+                parent->first_child = child;
+            } else {
+                TreeNode* sibling = parent->first_child;
+                while (sibling->next_sibling != nullptr) {
+                    sibling = sibling->next_sibling;
+                }
+                sibling->next_sibling = child;
+            }
+            path.push(child);
+        } else {
+            if (path.size() == 1) {
+                deleteTree(root);
+                return nullptr;
+            }
+            path.pop();
+        }
+    }
+
+    if (path.size() != 1) {
+        deleteTree(root);
+        return nullptr;
+    }
+
+    return root;
 }
 
 
@@ -311,13 +385,43 @@ TreeNode* bits_to_tree(const vector<bool>& bits) {
 *   above is to help you see the expressions clearly)
 *
 */
-
-// Do not modify this function signature
-ParseTreeNode* build_parse_tree(const string& expr) {
+ParseTreeNode* parseExpression(const string& expr, int& pos);
+ParseTreeNode* parseUnary(const string& expr, int& pos) {
+    if (pos >= (int)expr.size()) {
+        return nullptr;
+    }
+    if (expr[pos] == NOT) {
+        pos++;
+        ParseTreeNode* child = parseUnary(expr, pos);
+        return new ParseTreeNode{NOT, child, nullptr};
+    }
+    if (expr[pos] == '(') {
+        pos++;
+        ParseTreeNode* node = parseExpression(expr, pos);
+        if (pos < (int)expr.size() && expr[pos] == ')') {
+            pos++;
+        }
+        return node;
+    }
+    char value = expr[pos++];
+    return new ParseTreeNode{value, nullptr, nullptr};
 }
 
+ParseTreeNode* parseExpression(const string& expr, int& pos) {
+    ParseTreeNode* left = parseUnary(expr, pos);
+    while (pos < (int)expr.size() && (expr[pos] == AND || expr[pos] == OR)) {
+        char op = expr[pos++];
+        ParseTreeNode* right = parseUnary(expr, pos);
+        left = new ParseTreeNode{op, left, right};
+    }
+    return left;
+}
+// Do not modify this function signature
+ParseTreeNode* build_parse_tree(const string& expr) {
+    int pos = 0;
+    return parseExpression(expr, pos);
+}
 
 int main() {
-
     return 0;
 }
